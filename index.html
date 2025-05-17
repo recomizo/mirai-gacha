@@ -30,83 +30,84 @@
       background: #fff;
       border-bottom: 1px solid #ffe4ee;
     }
-    #gacha-box, #collection-box {
-      margin: 0;
-      padding: 16px 0 70px 0;
-      min-height: 60vh;
-    }
     #collection-list {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 14px 6px;
+      gap: 12px 2px;
       justify-items: center;
       margin: 0 auto;
       padding: 0 8px;
     }
     .char-card {
-      width: 100%;
-      min-width: 0;
-      max-width: 90px;
-      box-sizing: border-box;
+      background: none !important; /* ボックス背景なし */
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin: 0;
-      padding: 8px;
-      background: #fff6fa;
-      border-radius: 18px;
-      box-shadow: 0 2px 10px #ffe0ee;
-      border: none;
+      width: 100%;
+      max-width: 90px;
+      min-width: 0;
     }
     .char-emoji img {
-      width: 60px;
-      height: 60px;
+      width: 62px;
+      height: 62px;
       object-fit: contain;
-      border-radius: 10px;
       background: #fff;
-      margin-bottom: 6px;
-      box-shadow: 0 1px 10px #ffd0e7;
+      margin-bottom: 3px;
+      border-radius: 13px;
+      box-shadow: 0 0 0 4px #ffd6ec, 0 0 14px 3px #ff9dd6; /* ぼやけたピンク外枠 */
       cursor: pointer;
-      transition: transform 0.13s;
+      transition: box-shadow 0.16s, transform 0.13s;
     }
     .char-emoji img:active {
       transform: scale(1.1);
-      box-shadow: 0 2px 16px #fdc;
+      box-shadow: 0 0 0 8px #ffd6ec, 0 0 22px 8px #ff79ac;
     }
-    button {
-      display: inline-block;
-      width: 85vw;
-      max-width: 350px;
-      margin: 16px auto;
-      font-size: 1.2em;
-      padding: 20px 0;
-      border-radius: 18px;
-      background: linear-gradient(90deg,#ff79ac,#ffc7de);
-      color: #fff;
-      border: none;
-      box-shadow: 0 2px 8px #ffd0e7;
-      font-weight: bold;
-      letter-spacing: 0.08em;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:active {
-      background: linear-gradient(90deg,#ffc7de,#ff79ac);
-    }
-    .new-label {
+    .card-count {
+      font-size: 0.95em;
       color: #ff79ac;
-      font-weight: bold;
-      margin-left: 6px;
+      margin-top: 0px;
+      margin-bottom: 4px;
     }
     @media (max-width: 600px) {
-      .app-container { border-radius: 0; }
-      h1 { font-size: 1.4em; }
       #collection-list {
         grid-template-columns: repeat(2, 1fr);
       }
-      .char-card { max-width: 30vw; }
-      .char-emoji img { width: 22vw; height: 22vw; max-width: 60px; max-height: 60px;}
-      button { width: 95vw; max-width: none; }
+      .char-card { max-width: 27vw; }
+      .char-emoji img { width: 18vw; height: 18vw; min-width: 44px; min-height: 44px; }
+    }
+    /* ポップアップ */
+    #popup-bg {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    #popup-bg.active { display: flex; }
+    #popup-card {
+      background: #fff;
+      border-radius: 18px;
+      max-width: 95vw;
+      max-height: 95vh;
+      box-shadow: 0 2px 20px #888;
+      padding: 18px;
+      text-align: center;
+      position: relative;
+    }
+    #popup-img {
+      width: 80vw;
+      max-width: 400px;
+      max-height: 60vh;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 1px 10px #ffd0e7;
     }
     .bottom-nav {
       position: fixed;
@@ -138,35 +139,6 @@
       background: #ffe4ee;
       color: #ff3570;
       font-weight: bold;
-    }
-    /* ポップアップ */
-    #popup-bg {
-      display: none;
-      position: fixed;
-      z-index: 10000;
-      left: 0; top: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-    }
-    #popup-bg.active { display: flex; }
-    #popup-card {
-      background: #fff;
-      border-radius: 18px;
-      max-width: 95vw;
-      max-height: 95vh;
-      box-shadow: 0 2px 20px #888;
-      padding: 18px;
-      text-align: center;
-      position: relative;
-    }
-    #popup-img {
-      width: 80vw;
-      max-width: 400px;
-      max-height: 60vh;
-      border-radius: 16px;
-      background: #fff;
-      box-shadow: 0 1px 10px #ffd0e7;
     }
   </style>
 </head>
@@ -210,10 +182,8 @@
       { id: 10, name: "ぞうパイロット", desc: "そらにあこがれるぞう", img: "images/zou_pilot.jpg" }
     ];
 
-    // コレクション保存（ローカルストレージ）
     let collection = JSON.parse(localStorage.getItem('myCollection') || '{}');
 
-    // ガチャボタン
     document.getElementById("gacha-btn").onclick = function() {
       const idx = Math.floor(Math.random() * charaList.length);
       const chara = charaList[idx];
@@ -237,7 +207,6 @@
       `;
     };
 
-    // コレクション画面表示
     function showCollection() {
       document.getElementById("gacha-box").style.display = "none";
       document.getElementById("collection-box").style.display = "";
@@ -250,7 +219,7 @@
             <div class="char-emoji">
               <img src="${chara.img}" alt="" onclick="showPopup(${chara.id})" style="cursor:pointer;">
             </div>
-            <div style="color:#ff79ac;">枚数：${collection[chara.id]}</div>
+            <div class="card-count">枚数：${collection[chara.id]}</div>
           </div>`;
         }
       }
@@ -258,7 +227,6 @@
       document.getElementById("collection-list").innerHTML = html;
     }
 
-    // ガチャ画面に戻る
     function showGacha() {
       document.getElementById("collection-box").style.display = "none";
       document.getElementById("gacha-box").style.display = "";
@@ -266,7 +234,6 @@
       document.getElementById('nav-collection').classList.remove('active');
     }
 
-    // 画像クリックで拡大ポップアップ
     function showPopup(id) {
       const chara = charaList.find(c => c.id === id);
       document.getElementById("popup-img").src = chara.img;
@@ -280,7 +247,6 @@
       document.body.style.overflow = "";
     }
 
-    // 初期表示
     showGacha();
   </script>
 </body>
