@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>みらいのともだちガチャ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: 'Segoe UI', 'メイリオ', sans-serif;
+      background: linear-gradient(180deg, #ffe0e7 0%, #fff 100%);
+      margin: 0;
+      padding: 0;
+    }
+    .app-container {
+      max-width: 430px;
+      margin: 0 auto;
+      background: #fff;
+      min-height: 100vh;
+      box-shadow: 0 0 30px 0 #fcc6e2;
+      border-radius: 0 0 30px 30px;
+      overflow: hidden;
+      position: relative;
+    }
+    h1 {
+      margin: 0;
+      padding: 30px 0 10px 0;
+      font-size: 2.2em;
+      color: #ff79ac;
+      letter-spacing: 0.1em;
+      background: #fff;
+      border-bottom: 1px solid #ffe4ee;
+    }
+    #gacha-box, #collection-box {
+      margin: 0;
+      padding: 16px 0 70px 0;
+      min-height: 60vh;
+    }
+    .char-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 18px auto;
+      padding: 18px;
+      width: 90%;
+      max-width: 340px;
+      background: #fff6fa;
+      border-radius: 22px;
+      box-shadow: 0 2px 10px #ffe0ee;
+      border: none;
+    }
+    .char-emoji img {
+      width: 180px;
+      height: 180px;
+      object-fit: contain;
+      border-radius: 20px;
+      background: #fff;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 10px #ffd0e7;
+    }
+    button {
+      display: inline-block;
+      width: 85vw;
+      max-width: 350px;
+      margin: 16px auto;
+      font-size: 1.2em;
+      padding: 20px 0;
+      border-radius: 18px;
+      background: linear-gradient(90deg,#ff79ac,#ffc7de);
+      color: #fff;
+      border: none;
+      box-shadow: 0 2px 8px #ffd0e7;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:active {
+      background: linear-gradient(90deg,#ffc7de,#ff79ac);
+    }
+    .new-label {
+      color: #ff79ac;
+      font-weight: bold;
+      margin-left: 6px;
+    }
+    @media (max-width: 500px) {
+      .app-container { border-radius: 0; }
+      h1 { font-size: 1.4em; }
+      .char-card { max-width: 96vw; padding: 10px;}
+      .char-emoji img { width: 85vw; max-width: 200px; }
+      button { width: 95vw; max-width: none; }
+    }
+    .bottom-nav {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      background: #fff;
+      border-top: 1px solid #ffe4ee;
+      display: flex;
+      justify-content: space-around;
+      padding: 0;
+      box-shadow: 0 -2px 10px #ffd0e7;
+      z-index: 100;
+      height: 56px;
+    }
+    .bottom-nav button {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+      font-size: 1em;
+      background: none;
+      color: #ff79ac;
+      box-shadow: none;
+      font-weight: normal;
+      border: none;
+      height: 100%;
+      transition: background 0.15s;
+    }
+    .bottom-nav button:active, .bottom-nav button.active {
+      background: #ffe4ee;
+      color: #ff3570;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h1>みらいのともだちガチャ</h1>
+    <div id="gacha-box">
+      <div id="result"></div>
+      <button id="gacha-btn">ガチャをひく！</button>
+    </div>
+    <div id="collection-box" style="display:none">
+      <h2 style="color:#ff79ac;margin-top:0;">コレクション</h2>
+      <div id="collection-list"></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button id="nav-gacha" onclick="showGacha()" class="active">ガチャ</button>
+    <button id="nav-collection" onclick="showCollection()">コレクション</button>
+  </div>
+  <script>
+    // キャラクター画像ファイルは images フォルダに jpg で保存
+    const charaList = [
+      { id: 1, name: "ねこナイト", desc: "ゆうかんなねこのせんし", img: "images/neko_knight.jpg" },
+      { id: 2, name: "いぬまほうつかい", desc: "ふしぎなちからをもついぬ", img: "images/inu_mahoutsukai.jpg" },
+      { id: 3, name: "はなうさプリンセス", desc: "おはなだいすきうさぎのひめ", img: "images/hanausa_princess.jpg" },
+      { id: 4, name: "りんごのせんし", desc: "りんごがだいすきなせんし", img: "images/ringo_senshi.jpg" },
+      { id: 5, name: "きらきらパティシエ", desc: "おかしづくりがとくい！", img: "images/kirakira_patissier.jpg" },
+      { id: 6, name: "くもパイロット", desc: "そらをとぶのがだいすき", img: "images/kumo_pilot.jpg" },
+      { id: 7, name: "ぺんぎんけいさつ", desc: "みんなをまもるヒーロー", img: "images/pengin_keisatsu.jpg" },
+      { id: 8, name: "さかなドクター", desc: "びょうきをなおすさかな", img: "images/sakana_doctor.jpg" },
+      { id: 9, name: "ことりダンサー", desc: "おどるのがだいすき", img: "images/kotori_dancer.jpg" },
+      { id: 10, name: "ぞうパイロット", desc: "そらにあこがれるぞう", img: "images/zou_pilot.jpg" }
+    ];
+
+    // コレクション保存（ローカルストレージ）
+    let collection = JSON.parse(localStorage.getItem('myCollection') || '{}');
+
+    // ガチャボタン
+    document.getElementById("gacha-btn").onclick = function() {
+      const idx = Math.floor(Math.random() * charaList.length);
+      const chara = charaList[idx];
+      if (!collection[chara.id]) {
+        collection[chara.id] = 1;
+        localStorage.setItem('myCollection', JSON.stringify(collection));
+        var newMsg = '<span class="new-label">NEW!</span>';
+      } else {
+        collection[chara.id] += 1;
+        localStorage.setItem('myCollection', JSON.stringify(collection));
+        var newMsg = `<span>（${collection[chara.id]}回目！）</span>`;
+      }
+      document.getElementById("result").innerHTML = `
+        <div class="char-card">
+          <div class="char-emoji">
+            <img src="${chara.img}" alt="${chara.name}">
+          </div>
+          <div style="font-size:1.2em;">${chara.name} ${newMsg}</div>
+          <div style="font-size:0.9em;color:#888">${chara.desc}</div>
+        </div>
+      `;
+    };
+
+    // コレクション画面表示
+    function showCollection() {
+      document.getElementById("gacha-box").style.display = "none";
+      document.getElementById("collection-box").style.display = "";
+      document.getElementById('nav-gacha').classList.remove('active');
+      document.getElementById('nav-collection').classList.add('active');
+      let html = "";
+      for (let chara of charaList) {
+        if (collection[chara.id]) {
+          html += `<div class="char-card">
+            <div class="char-emoji">
+              <img src="${chara.img}" alt="${chara.name}">
+            </div>
+            <div style="font-size:1.1em;">${chara.name}</div>
+            <div style="font-size:0.9em;color:#888">${chara.desc}</div>
+            <div style="color:#ff79ac;">引いた回数：${collection[chara.id]}</div>
+          </div>`;
+        }
+      }
+      if (!html) html = "<div style='color:#aaa;margin-top:40px;'>まだなにもゲットしていません</div>";
+      document.getElementById("collection-list").innerHTML = html;
+    }
+
+    // ガチャ画面に戻る
+    function showGacha() {
+      document.getElementById("collection-box").style.display = "none";
+      document.getElementById("gacha-box").style.display = "";
+      document.getElementById('nav-gacha').classList.add('active');
+      document.getElementById('nav-collection').classList.remove('active');
+    }
+
+    // 初期表示
+    showGacha();
+  </script>
+</body>
+</html>
